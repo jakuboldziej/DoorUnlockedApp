@@ -1,4 +1,6 @@
 import { checkIfValidationNeeded } from "@/lib/fetch/door";
+import { registerForPushNotificationsAsync } from "@/lib/notifications";
+import * as Device from 'expo-device';
 import { createContext, Dispatch, PropsWithChildren, SetStateAction, use, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -6,12 +8,14 @@ interface DoorContextTypes {
   doorsUnlocked: boolean;
   setDoorsUnlocked: Dispatch<SetStateAction<boolean>>;
   isValidationNeeded: boolean;
+  expoPushToken: string | null;
 }
 
 const DoorContext = createContext<DoorContextTypes>({
   doorsUnlocked: false,
   setDoorsUnlocked: () => { },
-  isValidationNeeded: false
+  isValidationNeeded: false,
+  expoPushToken: null
 });
 
 export function useDoor() {
@@ -25,8 +29,49 @@ export function useDoor() {
 export function DoorProvider({ children }: PropsWithChildren) {
   const [doorsUnlocked, setDoorsUnlocked] = useState(false);
   const [isValidationNeeded, setIsValidationNeeded] = useState(false);
+  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
   useEffect(() => {
+    const initializeNotifications = async () => {
+      const token = await registerForPushNotificationsAsync();
+
+      if (token) {
+        setExpoPushToken(token);
+
+        try {
+          const baseUrl = process.env.EXPO_PUBLIC_API_URL;
+
+          if (baseUrl) {
+            const deviceId = Device.osInternalBuildId || 'unknown-device';
+
+            const response = await fetch(`${baseUrl}/esp32/door/register-push-token`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                pushToken: token,
+                deviceId: deviceId
+              }),
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+              console.error('Failed to register push token:', result);
+            }
+          } else {
+            console.error('EXPO_PUBLIC_API_URL is not defined');
+          }
+        } catch (error) {
+          console.error('Network error sending push token to backend:', error);
+        }
+      } else {
+        console.warn('No push token received from registerForPushNotificationsAsync');
+      }
+    };
+
+    initializeNotifications();
     const baseUrl = process.env.EXPO_PUBLIC_API_URL;
 
     if (!baseUrl) {
@@ -43,7 +88,7 @@ export function DoorProvider({ children }: PropsWithChildren) {
     });
 
     socket.on('connect', async () => {
-      console.log('Socket.IO connected');
+      console.info('Socket.IO connected');
 
       try {
         socket.emit("esp32:checkDoorsState", { requester: socket.id });
@@ -64,12 +109,12 @@ export function DoorProvider({ children }: PropsWithChildren) {
       setDoorsUnlocked(doorsState === 1);
     });
 
-    socket.on('esp32:doorState-response', (state) => {
+    socket.on('esp32:doorState-response', (state: number) => {
       setDoorsUnlocked(state === 1);
     });
 
     socket.on('disconnect', () => {
-      console.log('Socket.IO disconnected');
+      console.info('Socket.IO disconnected');
     });
 
     socket.on('connect_error', (err: unknown) => {
@@ -81,18 +126,13 @@ export function DoorProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  useEffect(() => {
-    if (doorsUnlocked === true) {
-
-    }
-  }, [doorsUnlocked]);
-
   return (
     <DoorContext
       value={{
         doorsUnlocked,
         setDoorsUnlocked,
-        isValidationNeeded
+        isValidationNeeded,
+        expoPushToken
       }}
     >
       {children}
