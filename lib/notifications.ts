@@ -53,18 +53,18 @@ export const registerForPushNotificationsAsync = async () =>  {
   let token;
 
   if (Platform.OS === 'android') {
-    await setNotificationChannelAsync('myNotificationChannel', {
-      name: 'Odblokuj drzwi',
-      importance: AndroidImportance.MAX, 
-      vibrationPattern: [0, 250, 250, 250], 
-      lightColor: '#FF231F7C',
-      sound: 'default', 
-      enableLights: true,
-      enableVibrate: true,
-      showBadge: true,
-      lockscreenVisibility: 1,
-      bypassDnd: true, 
-    });
+      await setNotificationChannelAsync('myNotificationChannel', {
+        name: 'Odblokuj drzwi',
+        importance: AndroidImportance.MAX,
+        vibrationPattern: [0, 500, 500, 500, 500, 1000],
+        lightColor: '#FF231F7C',
+        sound: 'default',
+        enableLights: true,
+        enableVibrate: true,
+        showBadge: true,
+        lockscreenVisibility: 1,
+        bypassDnd: true,
+      });
   }
 
   await setNotificationCategoryAsync('chore_notification', [
