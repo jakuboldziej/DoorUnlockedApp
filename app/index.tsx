@@ -1,5 +1,6 @@
 import { validateDoor } from "@/lib/fetch/door";
-import { useEffect, useState } from "react";
+import { registerBackgroundTask } from "@/lib/geolocation";
+import { useEffect, useRef, useState } from "react";
 import { Appearance, Text, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useDoor } from "./(context)/DoorContext";
@@ -9,8 +10,13 @@ export default function Index() {
 
   const [inputSecretCode, setInputSecretCode] = useState("");
   const [responseMessage, setResponseMessage] = useState("");
+  const inputRef = useRef<TextInput>(null);
 
   const colorScheme = Appearance.getColorScheme();
+
+  useEffect(() => {
+    registerBackgroundTask();
+  }, []);
 
   const backgroundColor = colorScheme === "dark" ? "#222" : "#fff";
   const textColor = colorScheme === "dark" ? "#fff" : "#222";
@@ -31,11 +37,20 @@ export default function Index() {
       console.error(error);
     } finally {
       setInputSecretCode("");
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   }
 
   useEffect(() => {
-    if (isValidationNeeded === false) setInputSecretCode("");
+    if (isValidationNeeded === false) {
+      setInputSecretCode("");
+    } else {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
   }, [isValidationNeeded]);
 
   useEffect(() => {
@@ -62,6 +77,7 @@ export default function Index() {
 
       {isValidationNeeded && (
         <TextInput
+          ref={inputRef}
           style={{ backgroundColor: inputBgColor, color: inputTextColor, width: 100, borderRadius: 20, textAlign: "center" }}
           keyboardType="numeric"
           value={inputSecretCode}
@@ -80,6 +96,8 @@ export default function Index() {
           {responseMessage}
         </Text>
       }
+
+      {/* <GeoFence /> */}
     </SafeAreaView>
   );
 }

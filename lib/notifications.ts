@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import { AndroidImportance, getExpoPushTokenAsync, getPermissionsAsync, requestPermissionsAsync, SchedulableTriggerInputTypes, scheduleNotificationAsync, setNotificationCategoryAsync, setNotificationChannelAsync } from "expo-notifications";
 import { Platform } from "react-native";
+import { registerPushTokenWithServer } from './fetch/notifications';
 
 export const schedulePushNotification = async (title: string, body: string, data: Record<string, unknown>) => {
   try {
@@ -85,7 +86,7 @@ export const registerForPushNotificationsAsync = async () =>  {
       finalStatus = status;
     }
     if (finalStatus !== 'granted') {
-      alert('Failed to get notification permissions!');
+      alert('Zezwól aplikacji na wysyłanie powiadomień!');
       return;
     }
     
@@ -100,6 +101,10 @@ export const registerForPushNotificationsAsync = async () =>  {
           projectId,
         })
       ).data;
+      
+      if (token) {
+        await registerPushTokenWithServer(token);
+      }
     } catch (e) {
       token = `${e}`;
       console.error('Error getting Expo push token:', e);
