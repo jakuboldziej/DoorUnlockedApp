@@ -36,6 +36,14 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "lib/audio/nuclear_alarm.mp3"
+          ]
+        }
       ]
     ],
     "experiments": {
