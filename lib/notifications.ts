@@ -3,6 +3,7 @@ import * as Device from 'expo-device';
 import { AndroidImportance, getExpoPushTokenAsync, getPermissionsAsync, requestPermissionsAsync, SchedulableTriggerInputTypes, scheduleNotificationAsync, setNotificationCategoryAsync, setNotificationChannelAsync } from "expo-notifications";
 import { Platform } from "react-native";
 import { registerPushTokenWithServer } from './fetch/notifications';
+import { getSoundName, getChannelSoundName } from './soundConfig';
 
 export const schedulePushNotification = async (
   title: string, 
@@ -11,7 +12,7 @@ export const schedulePushNotification = async (
   isCritical: boolean = false
 ) => {
   try {
-    const soundName = isCritical ? 'nuclear_alarm.mp3' : 'default';
+    const soundName = getSoundName(isCritical);
     
     const result = await scheduleNotificationAsync({
       content: {
@@ -68,7 +69,7 @@ export const sendPushNotification = async (
   data?: Record<string, unknown>,
   isCritical: boolean = false
 ) => {
-  const soundName = isCritical ? 'nuclear_alarm.mp3' : 'default';
+  const soundName = getSoundName(isCritical);
   
   const message = {
     to: expoPushToken,
@@ -158,7 +159,7 @@ export const registerForPushNotificationsAsync = async () =>  {
         importance: AndroidImportance.MAX,
         vibrationPattern: [0, 1500, 500, 1500, 500, 1500, 500, 1500],
         lightColor: '#FF0000',
-        sound: 'nuclear_alarm.mp3',
+        sound: getChannelSoundName(true),
         enableLights: true,
         enableVibrate: true,
         showBadge: true,
