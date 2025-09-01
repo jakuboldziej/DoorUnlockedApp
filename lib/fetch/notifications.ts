@@ -22,11 +22,11 @@ const getDeviceId = async (): Promise<string> => {
   }
 };
 
-export const registerPushTokenWithServer = async (pushToken: string) => {
+export const registerPushTokenWithServer = async (pushToken: string, tokenType: 'expo' | 'fcm' = 'fcm') => {
   try {
     const tokenRegistered = await AsyncStorage.getItem(TOKEN_REGISTERED_KEY);
     if (tokenRegistered === pushToken) {
-      console.log('Push token already registered');
+      console.log(`${tokenType.toUpperCase()} push token already registered`);
       return true;
     }
     
@@ -41,6 +41,7 @@ export const registerPushTokenWithServer = async (pushToken: string) => {
       body: JSON.stringify({
         pushToken,
         deviceId,
+        tokenType, // Add token type to distinguish between Expo and FCM
       }),
     });
     
@@ -50,9 +51,10 @@ export const registerPushTokenWithServer = async (pushToken: string) => {
       await AsyncStorage.setItem(TOKEN_REGISTERED_KEY, pushToken);
     }
     
+    console.log(`${tokenType.toUpperCase()} token registration result:`, result);
     return result.success;
-  } catch {
-    console.error('Failed to register push token with server');
+  } catch (error) {
+    console.error(`Failed to register ${tokenType.toUpperCase()} push token with server:`, error);
     return false;
   }
 };

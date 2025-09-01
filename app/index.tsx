@@ -1,3 +1,4 @@
+import FCMAdvancedTest from "@/components/FCMAdvancedTest";
 import { validateDoor } from "@/lib/fetch/door";
 import { registerBackgroundTask } from "@/lib/geolocation";
 import { useEffect, useRef, useState } from "react";
@@ -98,6 +99,9 @@ export default function Index() {
       }
 
       {/* <GeoFence /> */}
+
+      {/* FCM Advanced Test Component - Remove this in production */}
+      <FCMAdvancedTest />
     </SafeAreaView>
   );
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "884143066813",
+    "project_id": "doorunlockedapp",
+    "storage_bucket": "doorunlockedapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:884143066813:android:e45b47d8bca97a0793b1d4",
+        "android_client_info": {
+          "package_name": "com.jakuboldziej.doorunlockedapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6rAiHFT0xylKGtR3LrZTwaRz8OWXWdc4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

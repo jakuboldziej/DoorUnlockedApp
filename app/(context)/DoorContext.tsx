@@ -1,6 +1,7 @@
+import { initializeFCM, setupForegroundMessageHandler, setupNotificationOpenedHandler } from "@/lib/fcm-safe";
 import { checkIfValidationNeeded } from "@/lib/fetch/door";
+import { registerPushTokenWithServer } from "@/lib/fetch/notifications";
 import { registerForPushNotificationsAsync } from "@/lib/notifications";
-import * as Device from 'expo-device';
 import { createContext, Dispatch, PropsWithChildren, SetStateAction, use, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -33,42 +34,40 @@ export function DoorProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     const initializeNotifications = async () => {
-      const token = await registerForPushNotificationsAsync();
+      console.log('Initializing notifications...');
 
-      if (token) {
-        setExpoPushToken(token);
+      // Try to setup FCM (will be skipped in Expo Go)
+      await initializeFCM();
+      setupNotificationOpenedHandler();
+      const unsubscribeForeground = await setupForegroundMessageHandler();
 
-        try {
-          const baseUrl = process.env.EXPO_PUBLIC_API_URL;
+      // Always setup Expo notifications (works in both Expo Go and dev builds)
+      try {
+        const token = await registerForPushNotificationsAsync();
 
-          if (baseUrl) {
-            const deviceId = Device.osInternalBuildId || 'unknown-device';
+        if (token) {
+          setExpoPushToken(token);
 
-            const response = await fetch(`${baseUrl}/esp32/door/register-push-token`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                pushToken: token,
-                deviceId: deviceId
-              }),
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-              console.error('Failed to register push token:', result);
-            }
-          } else {
-            console.error('EXPO_PUBLIC_API_URL is not defined');
+          try {
+            // Register Expo token with tokenType
+            await registerPushTokenWithServer(token, 'expo');
+            console.log('Expo token registered successfully');
+          } catch (error) {
+            console.error('Network error sending expo push token to backend:', error);
           }
-        } catch (error) {
-          console.error('Network error sending push token to backend:', error);
+        } else {
+          console.warn('No push token received from registerForPushNotificationsAsync');
         }
-      } else {
-        console.warn('No push token received from registerForPushNotificationsAsync');
+      } catch (error) {
+        console.error('Error setting up Expo notifications:', error);
       }
+
+      // Return cleanup function for FCM
+      return () => {
+        if (unsubscribeForeground) {
+          unsubscribeForeground();
+        }
+      };
     };
 
     initializeNotifications();
@@ -123,6 +122,8 @@ export function DoorProvider({ children }: PropsWithChildren) {
 
     return () => {
       socket.disconnect();
+      // Cleanup FCM listener if it exists
+      // Note: The unsubscribeForeground is handled inside initializeNotifications
     };
   }, []);
 
@@ -139,3 +140,6 @@ export function DoorProvider({ children }: PropsWithChildren) {
     </DoorContext>
   )
 };
+
+// Add default export for the router
+export default DoorProvider;

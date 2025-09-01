@@ -19,7 +19,8 @@
         "foregroundImage": "./assets/images/unlocked_door_app_logo.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -28,6 +29,8 @@
     },
     "plugins": [
       "expo-router",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       [
         "expo-splash-screen",
         {
@@ -46,7 +49,8 @@
           "icon": "./assets/images/unlocked_door_app_logo.png",
           "color": "#FF0000",
           "androidMode": "default",
-          "androidCollapsedTitle": "DoorApp"
+          "androidCollapsedTitle": "DoorApp",
+          "iosDisplayInForeground": true
         }
       ]
     ],
